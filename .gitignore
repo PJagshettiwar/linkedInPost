@@ -1,7 +1,6 @@
 .env
 .linkedin_token.json
-nano-banana/.env
-nano-banana/images/posts/
 .idea/
 __pycache__/
 .DS_Store
+Topics/*/images/

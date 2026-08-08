@@ -21,13 +21,13 @@ import secrets
 import requests
 from dotenv import load_dotenv
 
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 # --- Config ---
 CLIENT_ID = os.environ["LINKEDIN_CLIENT_ID"]
 CLIENT_SECRET = os.environ["LINKEDIN_CLIENT_SECRET"]
 REDIRECT_URI = "http://localhost:3000/callback"
-TOKEN_FILE = os.path.join(os.path.dirname(__file__), ".linkedin_token.json")
+TOKEN_FILE = os.path.join(os.path.dirname(__file__), "..", "..", ".linkedin_token.json")
 SCOPE = "openid profile email w_member_social"
 
 AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization"
