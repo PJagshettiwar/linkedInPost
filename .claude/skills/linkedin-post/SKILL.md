@@ -118,21 +118,32 @@ synergy, leverage, utilize, revolutionize, game-changer, paradigm, cutting-edge,
 
 Create slug from topic (lowercase, hyphens, max 30 chars).
 
+### File structure
+
+All files for a topic live under `topics/<slug>/`:
+```
+topics/<slug>/
+├── <slug>-v1.md              # Post draft(s)
+├── <slug>-for-image.md       # Image text (plain text + **bold** markers)
+└── images/
+    └── <slug>_final.png      # Generated image
+```
+
 ### 2A — Prepare image content
 
 Decide what text goes on the image. This is the **hook or summary** — not the full post. Usually 2-5 short sentences that capture the core message. Think tweet-screenshot style.
 
-Save image text to `topics/<slug>-image.md` (no markdown headers, no hashtags — plain text only).
+Save image text to `topics/<slug>/<slug>-for-image.md`. Use `**bold**` markers for emphasis — the script renders them as actual bold text. No markdown headers, no hashtags.
 
 ### 2B — Generate image
 
 ```bash
 python3 post-generation/scripts/create_post_image.py \
-  topics/<slug>-image.md \
+  topics/<slug>/<slug>-for-image.md \
   topics/<slug>/images/<slug>_final.png
 ```
 
-Script auto-scales font (28-80px) to fill template. No manual tuning needed.
+Script auto-scales font (28-80px) to fill template. Supports `**bold**` markers.
 
 ### 2C — Show image to user
 
@@ -174,7 +185,7 @@ python3 post-generation/scripts/linkedin_post.py "FULL POST TEXT HERE"
 
 First-time auth opens browser for LinkedIn OAuth. Token saved to `.linkedin_token.json`.
 
-Save final post text to `topics/<slug>.md`.
+Save final post text to `topics/<slug>/<slug>.md` (inside the topic folder, not at topics root).
 
 ---
 

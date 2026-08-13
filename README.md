@@ -7,19 +7,16 @@ Write, design, and publish LinkedIn posts from terminal. Draft content in markdo
 ```
 linkedInPost/
 ├── topics/                          # Post content organized by topic
-│   └── superpowers/                 # Each topic gets its own folder
-│       ├── superpower_v2.md
-│       ├── superpowers-skills-final.md
-│       └── images/                  # Generated images for this topic
-│           └── superpowers-skills_final.png
+│   └── <topic-name>/               # Each topic gets its own folder
+│       ├── *.md                    # Post drafts and image text
+│       └── images/                 # Generated images
 ├── post-generation/
-│   ├── scripts/
-│   │   ├── linkedin_post.py        # Publish posts to LinkedIn (text or image)
-│   │   └── create_post_image.py    # Render post text onto branded templates
-│   └── template/
-│       └── linkedin-black-template.png  # Dark-themed LinkedIn post template
+│   ├── scripts/                    # LinkedIn API and image generation scripts
+│   └── template/                   # Branded post templates
 ├── .env                            # LinkedIn API credentials (git-ignored)
+├── .env.example                    # Credential template
 └── .claude/skills/linkedin-post/   # Claude Code skill for AI-assisted drafting
+    └── references/                 # Best practices and structural blueprints
 ```
 
 ## Quick Start
@@ -64,7 +61,7 @@ First run opens browser for LinkedIn OAuth. Token is saved and reused automatica
 
 ### Generate a Post Image
 
-Render markdown content onto a branded template:
+Render text onto a branded template (supports **bold** via Unicode):
 
 ```bash
 python post-generation/scripts/create_post_image.py topics/superpowers/superpowers-skills-final.md topics/superpowers/images/output.png
@@ -76,7 +73,7 @@ Use a custom template:
 python post-generation/scripts/create_post_image.py content.md output.png --template post-generation/template/linkedin-black-template.png
 ```
 
-Font size auto-scales to fill available space without truncation.
+Font size auto-scales (28-80px) to fill available space. Supports `**bold**` markers rendered as actual bold text.
 
 ### Full Workflow: Draft to Published
 
@@ -130,9 +127,9 @@ From Claude Code, just say what you need:
 | Step | What happens |
 |------|-------------|
 | **Brainstorm** | Researches trending angles, proposes 3 topic hooks, helps pick one |
-| **Draft** | Writes post using proven structure — hook, tension, evidence, takeaway |
+| **Draft** | Writes post using golden-example blueprint — hook, reframe, method, results, punchline. Unicode bold formatting, LinkedIn-native output. |
 | **Image** | Generates branded post image from your content using templates |
 | **Review** | Shows full post + image + char count for approval |
 | **Publish** | Posts to LinkedIn via API after explicit approval |
 
-The skill enforces best practices: 180-280 word range, max 2 emojis, specific numbers over vague claims, no corporate buzzwords. Posts are optimized for saves and dwell time — the top LinkedIn algorithm signals in 2026.
+The skill enforces best practices: 180-280 word range, one sentence per line, Unicode bold for emphasis (LinkedIn doesn't render markdown), specific numbers over vague claims, no corporate buzzwords. Includes a golden-example blueprint that produces LinkedIn-native formatting optimized for mobile scanning, saves, and dwell time.
