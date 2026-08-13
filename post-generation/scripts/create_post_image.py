@@ -9,6 +9,7 @@ Usage:
 
 import sys
 import os
+import re
 from PIL import Image, ImageDraw, ImageFont
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +28,29 @@ MIN_FONT = 28
 MAX_FONT = 80
 
 
-def load_font(size):
+def load_font(size, bold=False):
+    if bold:
+        bold_paths = [
+            ("/System/Library/Fonts/HelveticaNeue.ttc", 1),
+            ("/System/Library/Fonts/Helvetica.ttc", 1),
+            "/Library/Fonts/Arial Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+        ]
+        for entry in bold_paths:
+            if isinstance(entry, tuple):
+                path, index = entry
+                if os.path.exists(path):
+                    try:
+                        return ImageFont.truetype(path, size, index=index)
+                    except Exception:
+                        continue
+            else:
+                if os.path.exists(entry):
+                    try:
+                        return ImageFont.truetype(entry, size)
+                    except Exception:
+                        continue
     for path in [
         "/System/Library/Fonts/HelveticaNeue.ttc",
         "/System/Library/Fonts/Helvetica.ttc",
@@ -42,6 +65,67 @@ def load_font(size):
             except Exception:
                 continue
     return ImageFont.load_default()
+
+
+def parse_bold(text):
+    """Parse **bold** markers into segments: [(text, is_bold), ...]"""
+    parts = re.split(r'(\*\*.*?\*\*)', text)
+    segments = []
+    for part in parts:
+        if part.startswith('**') and part.endswith('**'):
+            segments.append((part[2:-2], True))
+        elif part:
+            segments.append((part, False))
+    return segments
+
+
+def measure_rich_line(segments, font_regular, font_bold, draw):
+    """Measure total width of a line with bold segments."""
+    width = 0
+    for text, is_bold in segments:
+        font = font_bold if is_bold else font_regular
+        bbox = draw.textbbox((0, 0), text, font=font)
+        width += bbox[2] - bbox[0]
+    return width
+
+
+def draw_rich_line(draw, x, y, segments, font_regular, font_bold, color):
+    """Draw a line with mixed regular/bold segments."""
+    for text, is_bold in segments:
+        font = font_bold if is_bold else font_regular
+        draw.text((x, y), text, fill=color, font=font)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        x += bbox[2] - bbox[0]
+
+
+def wrap_rich_text(text, font_regular, font_bold, max_width, draw):
+    """Wrap text preserving bold markers, returns list of [(text, is_bold), ...] per line."""
+    segments = parse_bold(text)
+    lines = []
+    current_line = []
+    current_width = 0
+
+    for seg_text, is_bold in segments:
+        font = font_bold if is_bold else font_regular
+        words = seg_text.split(' ')
+        for i, word in enumerate(words):
+            prefix = ' ' if (current_line and i == 0 and not seg_text.startswith(' ')) or (current_line and i > 0) else ''
+            if i > 0:
+                prefix = ' '
+            test_word = prefix + word
+            bbox = draw.textbbox((0, 0), test_word, font=font)
+            word_width = bbox[2] - bbox[0]
+            if current_width + word_width <= max_width or not current_line:
+                current_line.append((test_word, is_bold))
+                current_width += word_width
+            else:
+                lines.append(current_line)
+                current_line = [(word, is_bold)]
+                bbox = draw.textbbox((0, 0), word, font=font)
+                current_width = bbox[2] - bbox[0]
+    if current_line:
+        lines.append(current_line)
+    return lines
 
 
 def wrap_text(text, font, max_width, draw):
@@ -136,15 +220,23 @@ def render_post(text_file, output_path, template_path=None):
 
     print(f"Font: {font_size}px, fill: {total_height/available_height:.0%}")
 
+    font_bold = load_font(font_size, bold=True)
+
     for i, para in enumerate(paragraphs):
         for subline in para.split("\n"):
             subline = subline.strip()
             if not subline:
                 continue
-            wrapped = wrap_text(subline, font, max_text_width, draw)
-            for wline in wrapped:
-                draw.text((MARGIN_LEFT, y), wline, fill=TEXT_COLOR, font=font)
-                y += line_height
+            if '**' in subline:
+                rich_lines = wrap_rich_text(subline, font, font_bold, max_text_width, draw)
+                for segments in rich_lines:
+                    draw_rich_line(draw, MARGIN_LEFT, y, segments, font, font_bold, TEXT_COLOR)
+                    y += line_height
+            else:
+                wrapped = wrap_text(subline, font, max_text_width, draw)
+                for wline in wrapped:
+                    draw.text((MARGIN_LEFT, y), wline, fill=TEXT_COLOR, font=font)
+                    y += line_height
         if i < len(paragraphs) - 1:
             y += paragraph_gap - line_height
 
